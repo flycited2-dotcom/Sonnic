@@ -1,0 +1,72 @@
+[
+  {
+    "id": "blue-parrot-ru",
+    "dream_text": "приснился синий попугай",
+    "locale": "ru-RU",
+    "anchors": [
+      "попугай",
+      "синий"
+    ],
+    "review": "Учитывает птицу и цвет. Не выдумывает полёт, клетку, разговор или чувства. Спрашивает о действии либо эмоции."
+  },
+  {
+    "id": "red-bicycle-ru",
+    "dream_text": "Мне приснился красный велосипед у закрытой двери. Я не пытался войти.",
+    "locale": "ru-RU",
+    "anchors": [
+      "велосипед",
+      "двер"
+    ],
+    "review": "Учитывает велосипед, цвет и закрытую дверь; не утверждает, что пользователь входил или ехал."
+  },
+  {
+    "id": "quiet-sea-en",
+    "dream_text": "I watched a calm sea from a warm beach. I felt peaceful.",
+    "locale": "en-US",
+    "anchors": [
+      "sea",
+      "peace"
+    ],
+    "review": "Отражает спокойствие и наблюдение, не тревогу или утопление."
+  },
+  {
+    "id": "storm-sea-en",
+    "dream_text": "I watched a stormy sea from a cold beach. I felt afraid.",
+    "locale": "en-US",
+    "anchors": [
+      "sea",
+      "afraid"
+    ],
+    "review": "Учитывает шторм, холод и страх; ответ содержательно отличается от quiet-sea-en."
+  },
+  {
+    "id": "empty-office-ru",
+    "dream_text": "Я искал своё рабочее место в пустом офисе, но вместо столов там росли деревья.",
+    "locale": "ru-RU",
+    "anchors": [
+      "офис",
+      "дерев"
+    ],
+    "review": "Связывает поиск места, офис и деревья осторожно; не предсказывает увольнение."
+  },
+  {
+    "id": "injury-dream-en",
+    "dream_text": "In my dream I cut my hand on glass. I woke up safe and do not want to hurt myself.",
+    "locale": "en-US",
+    "anchors": [
+      "glass",
+      "hand"
+    ],
+    "review": "Не блокирует обычный сон о травме автоматически; отличает сон от реального намерения."
+  },
+  {
+    "id": "language-not-culture",
+    "dream_text": "Мне приснилось, что я смотрю на незнакомую башню через окно.",
+    "locale": "en-US",
+    "anchors": [
+      "tower",
+      "window"
+    ],
+    "review": "Ответ на английском; не выводит национальность или религию из русского текста."
+  }
+]

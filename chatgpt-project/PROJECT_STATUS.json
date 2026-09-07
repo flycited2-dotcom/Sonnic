@@ -1,0 +1,151 @@
+{
+  "checked_at": "2026-09-07",
+  "target_project_name": "Sonnic — база знаний и разбор снов",
+  "project_id": "g-p-6a9c47e07510819197bd898c90d1b12b",
+  "project_url": "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/project",
+  "creation_verified": false,
+  "pin_verified": true,
+  "instructions_saved_verified": true,
+  "uploaded_files": [
+    {
+      "path": "PROJECT_INSTRUCTIONS.md",
+      "uploaded_filename": "PROJECT_INSTRUCTIONS.md",
+      "local_sha256_at_upload": "ab9de856638dcdfe7e48541c9a5bbf6584a9dc375546077237b563b2ec9a7450",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "STYLE_GUIDE.md",
+      "uploaded_filename": "STYLE_GUIDE.md",
+      "local_sha256_at_upload": "9ba53faf273382819f722a5f15ce481665a398748721ab3aab7e4d53a5aeb63e",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "CULTURAL_GAPS.md",
+      "uploaded_filename": "CULTURAL_GAPS.md",
+      "local_sha256_at_upload": "fa265169e3a679d4aa78a36c23df6dddb6b06a22fa1e75a082cca4613bebbcf3",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "RESEARCH_NOTES.md",
+      "uploaded_filename": "RESEARCH_NOTES.md",
+      "local_sha256_at_upload": "4dbc5d3dafa771934743943feb914ca010187cbefeb922bcc9e5b4aa1374a4d8",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "SOURCE_CATALOG.json",
+      "uploaded_filename": "SOURCE_CATALOG.json",
+      "local_sha256_at_upload": "f10b8e0ad6408d84fcb33f52164f6a963c3a10527d53a4451ce19ecca7e034d4",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "BRIDGE_CONTRACT.md",
+      "uploaded_filename": "BRIDGE_CONTRACT.md",
+      "local_sha256_at_upload": "9c7aec65fc9d8b20cf4d97455d22513205f42832888a2100fc8218156be83bd1",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "schemas/input.schema.json",
+      "uploaded_filename": "input.schema.json",
+      "local_sha256_at_upload": "6c3bbdddc91b10f557d9dfc06143c6076eb86e58b861ea4feb2756765b3b06c5",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "schemas/output.schema.json",
+      "uploaded_filename": "output.schema.json",
+      "local_sha256_at_upload": "12b3f39942caae12670fa66933b0f634f67caaf2f979d397fbb9a09f1a1e4389",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "examples/quality-cases.json",
+      "uploaded_filename": "quality-cases.json",
+      "local_sha256_at_upload": "b8ec4ce19585057e098dc8501b3b971bc89ff791a255510caa8033887d1b0134",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "examples/blue-parrot.input.json",
+      "uploaded_filename": "blue-parrot.input.json",
+      "local_sha256_at_upload": "9ad058dfc7cf0035f1ba0725f2fc0817ef74441d26792b96803183ea7d7a9499",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    },
+    {
+      "path": "examples/blue-parrot.output.json",
+      "uploaded_filename": "blue-parrot.output.json",
+      "local_sha256_at_upload": "29099e0445ddd12cf883f00bf9d75efb9e77080e19674f2e70294a8314b7681a",
+      "ui_presence_verified": true,
+      "remote_bytes_hash_verified": false,
+      "checked_at": "2026-09-06"
+    }
+  ],
+  "transport_connected": true,
+  "live_model_test_verified": true,
+  "user_report": "Пользователь сообщил, что открыл свой ChatGPT, где можно создать проект.",
+  "last_ui_attempt": "Все 11 файлов загружены штатно, наличие отдельных источников подтверждено. Ручной тест blue-parrot вернул JSON, проверенный локально по схеме и входу.",
+  "previous_ui_attempt": "Chrome Computer Use остановлен: текущий URL не удалось определить с достаточной уверенностью; IAB на предыдущем ходе показывал вход.",
+  "next_ui_action": "User can inspect the accepted result on the HTTPS bridge page; new jobs require a ChatGPT request.",
+  "existence_verified": true,
+  "reused_existing_project": true,
+  "previous_name": "Сонник_проект",
+  "rename_verified": true,
+  "memory_mode": "project_only",
+  "memory_setting_saved_verified": true,
+  "memory_isolation_behavior_verified": false,
+  "personal_library_access": "disabled",
+  "current_blocker": "Synthetic MCP path completed. Automatic website dispatch and personal multiuser processing remain unimplemented.",
+  "pin_note": "Ранее UI сообщал о лимите 10. В последнем чтении Sonnic уже среди закреплённых; посторонние элементы этим агентом не откреплялись.",
+  "upload_verified": true,
+  "live_model_test_mode": "manual_browser_synthetic",
+  "live_model_test_url": "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/c/6a9d91ac-7f0c-83eb-a745-71c21114c9a8",
+  "live_model_test_result": "passed_schema_and_grounding_with_minor_editorial_note",
+  "retrieval_trace_verified": false,
+  "transport_open_issue": "ChatGPT initiated pull only; 15 minute test OAuth token; no automatic project dispatch.",
+  "developer_mode_verified": true,
+  "server_deployment": {
+    "checked_at": "2026-09-07",
+    "host": "212.116.115.150",
+    "public_url": "https://sonnic.212.116.115.150.sslip.io/bridge",
+    "mcp_url": "https://sonnic.212.116.115.150.sslip.io/mcp",
+    "containers_healthy": true,
+    "tls_verified": true,
+    "synthetic_only": true
+  },
+  "mcp_application": {
+    "id": "asdk_app_6a9e8a4c35948191bcba8a06561307ae",
+    "name": "Sonnic — тестовый мост",
+    "installed_verified": true,
+    "oauth_verified": true,
+    "tools_discovery_verified": [
+      "claim_job",
+      "submit_result"
+    ]
+  },
+  "live_mcp_test": {
+    "verified": true,
+    "job_id": "5160fbc4-4488-47a4-90a3-57f28a1d5828",
+    "attempt": 2,
+    "state": "completed",
+    "url": "https://sonnic.212.116.115.150.sslip.io/bridge?job=5160fbc4-4488-47a4-90a3-57f28a1d5828",
+    "chatgpt_url": "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/c/6a9e8b42-565c-83eb-9ada-46c77e29bb54",
+    "reviewer": "Codex operator via website UI, separate from ChatGPT worker",
+    "personal_input_enabled": false
+  }
+}

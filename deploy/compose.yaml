@@ -1,0 +1,48 @@
+name: sonnic
+x-common: &common
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "2"}
+services:
+  api:
+    <<: *common
+    build: {context: .., dockerfile: deploy/Dockerfile.api}
+    image: sonnic-api:local
+    ports: ["127.0.0.1:3180:3010"]
+    env_file: .env
+    environment:
+      AI_MODE: disabled
+      AI_ALLOW_PAID_REQUESTS: "false"
+      SONNIC_DB_PATH: /data/synthetic.sqlite3
+    volumes: ["data:/data"]
+    mem_limit: 384m
+    cpus: 0.75
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  web:
+    <<: *common
+    build: {context: .., dockerfile: deploy/Dockerfile.web}
+    image: sonnic-web:local
+    network_mode: service:api
+    depends_on:
+      api: {condition: service_healthy}
+    mem_limit: 512m
+    cpus: 0.75
+  gateway:
+    <<: *common
+    image: sonnic-api:local
+    network_mode: service:api
+    depends_on:
+      api: {condition: service_healthy}
+    env_file: .env
+    command: ["python", "-m", "uvicorn", "apps.bridge.gateway:app", "--host", "0.0.0.0", "--port", "3010", "--no-access-log"]
+    mem_limit: 192m
+    cpus: 0.5
+volumes:
+  data:

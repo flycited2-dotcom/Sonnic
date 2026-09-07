@@ -1,0 +1,12 @@
+FROM python:3.12-slim-bookworm
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+COPY apps/api/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && useradd --uid 10001 --create-home sonnic
+COPY apps/api /app/apps/api
+COPY apps/bridge /app/apps/bridge
+COPY packages/prompt_registry /app/packages/prompt_registry
+COPY tests/quality/dreams.json /app/tests/quality/dreams.json
+RUN mkdir /data && chown sonnic:sonnic /data
+USER 10001:10001
+CMD ["python", "-m", "uvicorn", "apps.api.sonnic.main:app", "--host", "127.0.0.1", "--port", "8000", "--no-access-log"]

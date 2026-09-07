@@ -1,0 +1,221 @@
+{
+  "version": "knowledge-v1",
+  "prepared_at": "2026-09-06",
+  "target_project_name": "Sonnic — база знаний и разбор снов",
+  "included_scope": "bibliography_and_original_notes_only",
+  "source_catalog": "docs/research/sources.json",
+  "sources": [
+    {
+      "source_id": "R01",
+      "title": "The neural correlates of dreaming",
+      "url": "https://doi.org/10.1038/nn.4545",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "В PMC авторская рукопись. Разрешение коммерческого переиспользования не подтверждено; только ссылка и собственная заметка.",
+      "location_in_upload": "RESEARCH_NOTES.md#R01"
+    },
+    {
+      "source_id": "R02",
+      "title": "Dreaming of a Learning Task is Associated with Enhanced Sleep-Dependent Memory Consolidation",
+      "url": "https://doi.org/10.1016/j.cub.2010.03.027",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Авторская рукопись Elsevier в PMC; открытая лицензия коммерческого использования не подтверждена. Только библиография.",
+      "location_in_upload": "RESEARCH_NOTES.md#R02"
+    },
+    {
+      "source_id": "R03",
+      "title": "Dreaming of a Learning Task is Associated with Enhanced Memory Consolidation: Replication in an Overnight Sleep Study",
+      "url": "https://doi.org/10.1111/jsr.12749",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Авторская рукопись в PMC; разрешение на переиздание/коммерческий корпус не подтверждено.",
+      "location_in_upload": "RESEARCH_NOTES.md#R03"
+    },
+    {
+      "source_id": "R04",
+      "title": "Real-time dialogue between experimenters and dreamers during REM sleep",
+      "url": "https://doi.org/10.1016/j.cub.2021.01.026",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "В PMC авторская рукопись; открытое чтение не принято за разрешение распространения.",
+      "location_in_upload": "RESEARCH_NOTES.md#R04"
+    },
+    {
+      "source_id": "R05",
+      "title": "Peace of mind and anxiety in the waking state are related to the affective content of dreams",
+      "url": "https://doi.org/10.1038/s41598-018-30721-1",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "CC BY 4.0 у издателя: атрибуция, ссылка на лицензию, указание изменений; сторонние материалы проверять отдельно. Исходные личные дневники не импортированы.",
+      "location_in_upload": "RESEARCH_NOTES.md#R05"
+    },
+    {
+      "source_id": "R06",
+      "title": "Our dreams, our selves: automatic analysis of dream reports",
+      "url": "https://doi.org/10.1098/rsos.192080",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Статья доступна у авторов и в PMC; точная лицензия используемой версии и отдельные права корпуса требуют проверки перед импортом. Сейчас только ссылка/заметка.",
+      "location_in_upload": "RESEARCH_NOTES.md#R06"
+    },
+    {
+      "source_id": "R07",
+      "title": "DreamBank",
+      "url": "https://dreambank.net/index.html",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Единая лицензия на коммерческую загрузку/обучение не подтверждена. Публичная доступность не означает разрешение: корпус не скачан и не индексируется.",
+      "location_in_upload": "RESEARCH_NOTES.md#R07"
+    },
+    {
+      "source_id": "R08",
+      "title": "Coding Rules for the Hall/Van de Castle System of Quantitative Dream Content Analysis / The Content Analysis of Dreams",
+      "url": "https://dreams.ucsc.edu/Coding/index.html",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Онлайн публикация правил не подтверждает свободную лицензию. Правила, примеры и книгу не копировали; перед переизданием получить разрешение.",
+      "location_in_upload": "RESEARCH_NOTES.md#R08"
+    },
+    {
+      "source_id": "R09",
+      "title": "Studying dream content using the archive and search engine on DreamBank.net",
+      "url": "https://doi.org/10.1016/j.concog.2008.06.010",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "На сайте авторский репринт Elsevier. Разрешение на коммерческую републикацию не подтверждено; только ссылка/заметка.",
+      "location_in_upload": "RESEARCH_NOTES.md#R09"
+    },
+    {
+      "source_id": "R10",
+      "title": "Neural decoding of visual imagery during sleep",
+      "url": "https://doi.org/10.1126/science.1234330",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Science/AAAS; открытая лицензия не подтверждена. Только библиография и заметка по аннотации.",
+      "location_in_upload": "RESEARCH_NOTES.md#R10"
+    },
+    {
+      "source_id": "R11",
+      "title": "Evidence for an emotional adaptive function of dreams: a cross-cultural study",
+      "url": "https://doi.org/10.1038/s41598-023-43319-z",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Статья открыта; перед загрузкой проверить Rights and permissions конкретной версии. LIWC-22 имеет отдельные условия; словарь и рассказы не импортированы.",
+      "location_in_upload": "RESEARCH_NOTES.md#R11"
+    },
+    {
+      "source_id": "R12",
+      "title": "Dreaming and the brain: from phenomenology to neurophysiology",
+      "url": "https://doi.org/10.1016/j.tics.2009.12.001",
+      "checked_at": "2026-09-05",
+      "included_material": "original_note_and_bibliography",
+      "full_text_included": false,
+      "full_text_upload_allowed_by_this_manifest": false,
+      "rights_of_original": "Авторская рукопись Elsevier в PMC; разрешение распространения не подтверждено.",
+      "location_in_upload": "RESEARCH_NOTES.md#R12"
+    }
+  ],
+  "files": [
+    {
+      "path": "PROJECT_INSTRUCTIONS.md",
+      "sha256": "ab9de856638dcdfe7e48541c9a5bbf6584a9dc375546077237b563b2ec9a7450",
+      "bytes": 8511,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "STYLE_GUIDE.md",
+      "sha256": "9ba53faf273382819f722a5f15ce481665a398748721ab3aab7e4d53a5aeb63e",
+      "bytes": 3079,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "CULTURAL_GAPS.md",
+      "sha256": "fa265169e3a679d4aa78a36c23df6dddb6b06a22fa1e75a082cca4613bebbcf3",
+      "bytes": 2670,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "RESEARCH_NOTES.md",
+      "sha256": "4dbc5d3dafa771934743943feb914ca010187cbefeb922bcc9e5b4aa1374a4d8",
+      "bytes": 23346,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "SOURCE_CATALOG.json",
+      "sha256": "f10b8e0ad6408d84fcb33f52164f6a963c3a10527d53a4451ce19ecca7e034d4",
+      "bytes": 24487,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "BRIDGE_CONTRACT.md",
+      "sha256": "9c7aec65fc9d8b20cf4d97455d22513205f42832888a2100fc8218156be83bd1",
+      "bytes": 10048,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "schemas/input.schema.json",
+      "sha256": "6c3bbdddc91b10f557d9dfc06143c6076eb86e58b861ea4feb2756765b3b06c5",
+      "bytes": 3726,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "schemas/output.schema.json",
+      "sha256": "12b3f39942caae12670fa66933b0f634f67caaf2f979d397fbb9a09f1a1e4389",
+      "bytes": 4155,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "examples/quality-cases.json",
+      "sha256": "b8ec4ce19585057e098dc8501b3b971bc89ff791a255510caa8033887d1b0134",
+      "bytes": 2846,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "examples/blue-parrot.input.json",
+      "sha256": "9ad058dfc7cf0035f1ba0725f2fc0817ef74441d26792b96803183ea7d7a9499",
+      "bytes": 666,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    },
+    {
+      "path": "examples/blue-parrot.output.json",
+      "sha256": "29099e0445ddd12cf883f00bf9d75efb9e77080e19674f2e70294a8314b7681a",
+      "bytes": 1512,
+      "upload_allowed": true,
+      "contains_personal_dreams": false
+    }
+  ],
+  "remote_state_file": "PROJECT_STATUS.json"
+}

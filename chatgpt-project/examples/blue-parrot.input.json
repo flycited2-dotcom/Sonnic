@@ -1,0 +1,21 @@
+{
+  "contract_version": "sonnic-project-v1",
+  "knowledge_version": "knowledge-v1",
+  "job_id": "00000000-0000-0000-0000-000000000065",
+  "lease_id": "00000000-0000-0000-0000-000000000066",
+  "attempt": 1,
+  "input_sha256": "d91ed16b80a2af7dd593d54702e97fb156755df1c7209fb2a0cf4b968d380cb3",
+  "data_class": "synthetic",
+  "output_locale": "ru-RU",
+  "dream": {
+    "dream_text": "приснился синий попугай",
+    "wake_emotion": "",
+    "dream_date": null,
+    "recurring": false,
+    "locale": "ru-RU",
+    "content_language": "und",
+    "recognition_locale": null,
+    "region": null,
+    "cultural_perspective": null
+  }
+}

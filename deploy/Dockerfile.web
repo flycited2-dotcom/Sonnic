@@ -1,0 +1,15 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=1536
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/package.json
+RUN npm ci --no-audit --no-fund
+COPY apps/web ./apps/web
+RUN npm run build
+
+FROM node:24-bookworm-slim
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=build /app /app
+USER node
+CMD ["npm", "run", "start"]

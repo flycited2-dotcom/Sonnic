@@ -1,0 +1,192 @@
+{
+  "$defs": {
+    "PublicReflection": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 150,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "symbols": {
+          "items": {
+            "$ref": "#/$defs/Symbol"
+          },
+          "maxItems": 6,
+          "title": "Symbols",
+          "type": "array"
+        },
+        "summary": {
+          "maxLength": 4000,
+          "minLength": 20,
+          "title": "Summary",
+          "type": "string"
+        },
+        "key_connection": {
+          "maxLength": 1000,
+          "minLength": 10,
+          "title": "Key Connection",
+          "type": "string"
+        },
+        "reflection_question": {
+          "maxLength": 600,
+          "minLength": 10,
+          "title": "Reflection Question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "symbols",
+        "summary",
+        "key_connection",
+        "reflection_question"
+      ],
+      "title": "PublicReflection",
+      "type": "object"
+    },
+    "SourceUse": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^R(0[1-9]|1[0-2])$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "note": {
+          "maxLength": 280,
+          "minLength": 10,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "note"
+      ],
+      "title": "SourceUse",
+      "type": "object"
+    },
+    "Symbol": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "evidence": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Evidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "evidence"
+      ],
+      "title": "Symbol",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "sonnic-project-v1",
+      "default": "sonnic-project-v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "knowledge_version": {
+      "const": "knowledge-v1",
+      "default": "knowledge-v1",
+      "title": "Knowledge Version",
+      "type": "string"
+    },
+    "job_id": {
+      "format": "uuid",
+      "title": "Job Id",
+      "type": "string"
+    },
+    "lease_id": {
+      "format": "uuid",
+      "title": "Lease Id",
+      "type": "string"
+    },
+    "attempt": {
+      "maximum": 3,
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "input_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Input Sha256",
+      "type": "string"
+    },
+    "output_locale": {
+      "enum": [
+        "ru-RU",
+        "en-US"
+      ],
+      "title": "Output Locale",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "reflection",
+        "needs_context",
+        "support",
+        "refused"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "reflection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PublicReflection"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "safe_message": {
+      "anyOf": [
+        {
+          "maxLength": 800,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Safe Message"
+    },
+    "source_use": {
+      "items": {
+        "$ref": "#/$defs/SourceUse"
+      },
+      "maxItems": 12,
+      "title": "Source Use",
+      "type": "array"
+    }
+  },
+  "required": [
+    "job_id",
+    "lease_id",
+    "attempt",
+    "input_sha256",
+    "output_locale",
+    "outcome",
+    "reflection",
+    "safe_message",
+    "source_use"
+  ],
+  "title": "JobOutput",
+  "type": "object"
+}
