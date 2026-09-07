@@ -1,13 +1,13 @@
-"""Synthetic-only site routes and stateless JSON Streamable HTTP MCP subset."""
+"""Owner-scoped beta site routes and stateless JSON Streamable HTTP MCP subset."""
 import json
 from urllib.parse import parse_qsl, urlencode
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
-from pydantic import Field, StrictBool, ValidationError
+from pydantic import Field, StrictBool, ValidationError, model_validator
 
-from apps.api.sonnic.models import Model
+from apps.api.sonnic.models import DreamInput, Model
 from .contracts import JobOutput
 from .oauth import SCOPE
 from .queue import BridgeError, Principal
@@ -16,7 +16,14 @@ VERSIONS = {'2025-03-26', '2025-06-18', '2025-11-25'}
 
 
 class Enqueue(Model):
-    case_id: str = Field(min_length=1, max_length=100)
+    case_id: str | None = Field(default=None, min_length=1, max_length=100)
+    dream: DreamInput | None = None
+
+    @model_validator(mode='after')
+    def exactly_one_input(self):
+        if (self.case_id is None) == (self.dream is None):
+            raise ValueError('one_input_required')
+        return self
 
 
 class Review(Model):
@@ -64,13 +71,18 @@ def register_bridge(app, guest):
 
     @router.get('/api/v1/bridge/config')
     def config():
-        return {'synthetic_only': True, 'automatic_dispatch': False, 'chatgpt_connected': False,
+        return {'synthetic_only': False, 'personal_input_enabled': True,
+                'automatic_dispatch': False, 'chatgpt_connected': False,
                 'mcp_url': oauth().settings.resource, 'oauth_configured': bool(oauth().settings.redirect_uri),
                 'cases': [{'id': c['id'], 'dream_text': c['dream_text'], 'locale': c['locale']} for c in queue().cases.values()]}
 
     @router.post('/api/v1/bridge/jobs', status_code=201)
     def enqueue(body: Enqueue, sid=Depends(guest), idempotency_key: UUID = Header()):
-        return {'job_id': call(queue().enqueue, actor(sid), body.case_id, idempotency_key), 'automatic_dispatch': False}
+        if body.dream is not None:
+            job_id = call(queue().enqueue_dream, actor(sid), body.dream, idempotency_key)
+        else:
+            job_id = call(queue().enqueue, actor(sid), body.case_id, idempotency_key)
+        return {'job_id': job_id, 'automatic_dispatch': False}
 
     @router.get('/api/v1/bridge/jobs/{job_id}')
     def snapshot(job_id: UUID, sid=Depends(guest)):
@@ -194,12 +206,12 @@ def register_bridge(app, guest):
                 return rpc_error(identifier, -32602, 'Invalid params')
             result = {'protocolVersion': requested if requested in VERSIONS else '2025-11-25',
                       'capabilities': {'tools': {}}, 'serverInfo': {'name': 'sonnic-synthetic-bridge', 'version': '0.4.0'},
-                      'instructions': 'Synthetic test jobs only. Never claim publication: submit_result returns awaiting_review. A website operator must review. No arbitrary URLs or owner arguments.'}
+                'instructions': 'Owner-scoped beta jobs may contain personal dream text. Never claim publication: submit_result returns awaiting_review. A website operator must review. No arbitrary URLs or owner arguments.'}
         elif method == 'ping':
             result = {}
         elif method == 'tools/list':
             result = {'tools': [
-                tool('claim_job', 'Lease the current owner\'s synthetic job using its ID and stable claim key. No job discovery or personal dream input.', ClaimArgs.model_json_schema()),
+                tool('claim_job', 'Lease the current owner\'s exact job using its ID and stable claim key. The payload may contain personal dream text; do not retain it outside this job.', ClaimArgs.model_json_schema()),
                 tool('submit_result', 'Submit the correlated JSON candidate for separate website review; this does not publish it.', JobOutput.model_json_schema())]}
         elif method == 'tools/call':
             if set(params)-{'name', 'arguments', '_meta'}:

@@ -101,7 +101,7 @@
   "user_report": "Пользователь сообщил, что открыл свой ChatGPT, где можно создать проект.",
   "last_ui_attempt": "Все 11 файлов загружены штатно, наличие отдельных источников подтверждено. Ручной тест blue-parrot вернул JSON, проверенный локально по схеме и входу.",
   "previous_ui_attempt": "Chrome Computer Use остановлен: текущий URL не удалось определить с достаточной уверенностью; IAB на предыдущем ходе показывал вход.",
-  "next_ui_action": "User can inspect the accepted result on the HTTPS bridge page; new jobs require a ChatGPT request.",
+  "next_ui_action": "Upload the v1.1 project instructions and input schema, then run a personal owner-only job from the HTTPS bridge.",
   "existence_verified": true,
   "reused_existing_project": true,
   "previous_name": "Сонник_проект",
@@ -109,15 +109,15 @@
   "memory_mode": "project_only",
   "memory_setting_saved_verified": true,
   "memory_isolation_behavior_verified": false,
-  "personal_library_access": "disabled",
-  "current_blocker": "Synthetic MCP path completed. Automatic website dispatch and personal multiuser processing remain unimplemented.",
+  "personal_library_access": "owner_only_beta_prepared",
+  "current_blocker": "Personal site path is deployed after the pending ChatGPT project file refresh. Ordinary ChatGPT Plus still requires one owner message per job; public multiuser processing remains out of scope.",
   "pin_note": "Ранее UI сообщал о лимите 10. В последнем чтении Sonnic уже среди закреплённых; посторонние элементы этим агентом не откреплялись.",
   "upload_verified": true,
-  "live_model_test_mode": "manual_browser_synthetic",
+  "live_model_test_mode": "manual_browser_owner_beta",
   "live_model_test_url": "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/c/6a9d91ac-7f0c-83eb-a745-71c21114c9a8",
   "live_model_test_result": "passed_schema_and_grounding_with_minor_editorial_note",
   "retrieval_trace_verified": false,
-  "transport_open_issue": "ChatGPT initiated pull only; 15 minute test OAuth token; no automatic project dispatch.",
+  "transport_open_issue": "ChatGPT Plus project initiates pull only; no automatic server trigger is available in this account.",
   "developer_mode_verified": true,
   "server_deployment": {
     "checked_at": "2026-09-07",
@@ -126,7 +126,9 @@
     "mcp_url": "https://sonnic.212.116.115.150.sslip.io/mcp",
     "containers_healthy": true,
     "tls_verified": true,
-    "synthetic_only": true
+    "synthetic_only": false,
+    "personal_owner_beta": true,
+    "personal_create_delete_verified": true
   },
   "mcp_application": {
     "id": "asdk_app_6a9e8a4c35948191bcba8a06561307ae",
@@ -147,5 +149,15 @@
     "chatgpt_url": "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/c/6a9e8b42-565c-83eb-9ada-46c77e29bb54",
     "reviewer": "Codex operator via website UI, separate from ChatGPT worker",
     "personal_input_enabled": false
+  },
+  "workspace_agents_api_available": false,
+  "workspace_agents_check": "ChatGPT Plus account; /admin/access-tokens redirected to the normal home page on 2026-09-07.",
+  "personal_beta": {
+    "code_ready": true,
+    "deployed": true,
+    "project_files_refreshed": false,
+    "multiuser": false,
+    "explicit_consent_required": true,
+    "logical_delete_available": true
   }
 }

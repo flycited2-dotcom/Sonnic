@@ -14,7 +14,7 @@ class JobInput(Model):
     lease_id: UUID
     attempt: int = Field(ge=1, le=3)
     input_sha256: str = Field(pattern="^[a-f0-9]{64}$")
-    data_class: Literal["synthetic"] = "synthetic"
+    data_class: Literal["synthetic", "personal"] = "synthetic"
     output_locale: Literal["ru-RU", "en-US"]
     dream: DreamInput
 

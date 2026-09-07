@@ -89,6 +89,15 @@ def create_job(client):
     return response.json()['job_id']
 
 
+def create_personal_job(client):
+    response = client.post('/api/v1/bridge/jobs', headers={'Idempotency-Key': str(uuid4())}, json={'dream': {
+        'dream_text': 'Мне приснился синий попугай, который сидел у окна.',
+        'wake_emotion': 'удивление', 'locale': 'ru-RU', 'content_language': 'ru',
+    }})
+    assert response.status_code == 201, response.text
+    return response.json()['job_id']
+
+
 def claim(client, bearer, job_id):
     response = rpc(client, bearer, 'tools/call', {'name': 'claim_job', 'arguments': {
         'job_id': job_id, 'claim_key': str(uuid4()),
@@ -151,6 +160,16 @@ def test_oauth_mcp_candidate_requires_owner_review(client):
     assert 'lease_id' not in reviewed['result'] and 'source_use' not in reviewed['result']
     assert client.post('/api/v1/bridge/connections/revoke').status_code == 204
     assert rpc(client, bearer, 'tools/list', {}).status_code == 401
+
+
+def test_personal_input_is_owner_bound_and_marked_for_worker(client):
+    bearer = token(client)
+    job_id = create_personal_job(client)
+    packet = claim(client, bearer, job_id)
+    assert packet['data_class'] == 'personal'
+    assert packet['dream']['dream_text'] == 'Мне приснился синий попугай, который сидел у окна.'
+    snapshot = client.get('/api/v1/bridge/jobs/' + job_id).json()
+    assert snapshot['data_class'] == 'personal'
 
 
 def test_authorization_code_requires_pkce_and_is_single_use(client):

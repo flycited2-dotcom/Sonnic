@@ -140,7 +140,7 @@ export default function Home() {
   return <div className="site-shell">
     <header className="header">
       <a href="/" className="brand" aria-label="Sonnic"><Moon /><span>sonnic<span className="brand-dot">.</span></span></a>
-      <div className="nav"><a href="/bridge">{locale === "ru-RU" ? "Тест моста" : "Bridge lab"}</a><a href="#approach">{t.how}</a><div className="locale-switch" role="group" aria-label={t.localeLabel}>
+      <div className="nav"><a href="/bridge">{locale === "ru-RU" ? "Разбор через ChatGPT" : "ChatGPT reflection"}</a><a href="#approach">{t.how}</a><div className="locale-switch" role="group" aria-label={t.localeLabel}>
         <button type="button" aria-pressed={locale === "ru-RU"} onClick={() => changeLocale("ru-RU")}>RU</button>
         <button type="button" aria-pressed={locale === "en-US"} onClick={() => changeLocale("en-US")}>EN</button>
       </div></div>
@@ -149,8 +149,8 @@ export default function Home() {
     <main>
       <div className="mode-banner"><span className="status-dot"/><div><strong>{displayReal ? t.real : config?.ai_mode === "disabled" ? t.off : t.demo}</strong><span>{displayReal ? t.realBody : config?.ai_mode === "disabled" ? t.disabled : t.demoBody}</span></div></div>
       {!displayReal&&<section className="bridge-entry" aria-label={locale==="ru-RU"?"Разбор через ChatGPT":"Analysis through ChatGPT"}>
-        <div><strong>{locale==="ru-RU"?"Проверяем разбор через проект ChatGPT":"Test analysis through the ChatGPT project"}</strong><p>{locale==="ru-RU"?"Отдельная страница для тестовых снов: задание, статус и проверка ответа. Запрос в ChatGPT пока нужно запускать отдельно; подключение ещё проверяется.":"A separate page for sample dreams: a task, its status and answer review. ChatGPT requests still need to be started separately; the connection is being tested."}</p></div>
-        <a className="secondary" href="/bridge">{locale==="ru-RU"?"Открыть тест связи с ChatGPT":"Open the ChatGPT connection test"}</a>
+        <div><strong>{locale==="ru-RU"?"Персональный разбор через ваш проект ChatGPT":"Personal reflection through your ChatGPT project"}</strong><p>{locale==="ru-RU"?"Введите или надиктуйте сон, передайте задание в проект ChatGPT и получите результат на сайте. API-ключ OpenAI не используется.":"Type or dictate a dream, hand the job to your ChatGPT project, and receive the result on the site. No OpenAI API key is used."}</p></div>
+        <a className="secondary" href="/bridge">{locale==="ru-RU"?"Открыть рабочий разбор":"Open the reflection flow"}</a>
       </section>}
       {notice && <p className="notice" role="status">{t.deleted}</p>}
       {!did ? <div className="entry-grid">

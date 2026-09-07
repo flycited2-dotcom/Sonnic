@@ -133,8 +133,11 @@
       "type": "string"
     },
     "data_class": {
-      "const": "synthetic",
       "default": "synthetic",
+      "enum": [
+        "synthetic",
+        "personal"
+      ],
       "title": "Data Class",
       "type": "string"
     },

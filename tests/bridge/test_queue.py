@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
+from apps.api.sonnic.models import DreamInput
 from apps.bridge.contracts import JobOutput, SourceUse, UnconnectedProjectTransport
 from apps.bridge.queue import BridgeError, Principal, Queue
 
@@ -58,13 +59,19 @@ def test_approval_gate_and_site_projection(lab):
     assert q.submit(worker, result) == 'completed'
 
 
-def test_synthetic_only_and_all_fixed_cases(lab):
+def test_fixed_cases_and_personal_owner_input(lab):
     q, site, *_ = lab
     with pytest.raises(BridgeError, match='synthetic_case_required'):
         q.enqueue(site, 'My private dream written here', uuid4())
     assert len(q.cases) == 7
     for case in q.cases:
         assert q.status(site, UUID(q.enqueue(site, case, uuid4())))['state'] == 'queued'
+    personal = UUID(q.enqueue_dream(site, DreamInput(
+        dream_text='Мне приснился синий попугай, который сидел у окна.',
+        wake_emotion='удивление', locale='ru-RU', content_language='ru'), uuid4()))
+    packet = q.claim(Principal('worker-personal', site.owner, frozenset({'worker'})), personal, uuid4())
+    assert packet.data_class == 'personal'
+    assert packet.dream.wake_emotion == 'удивление'
 
 
 def test_idempotent_enqueue_claim_and_submit(lab):

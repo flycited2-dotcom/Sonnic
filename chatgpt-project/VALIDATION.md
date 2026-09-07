@@ -1,13 +1,16 @@
 # Проверка локального пакета и контракта
 
-Актуальный статус 2026-09-06: [проект Sonnic](https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/project) существует, переименован, закреплён и содержит сохранённые инструкции и **все 11 файлов** из manifest. Память ограничена проектом; это не изоляция клиентов внутри него. [Ручной синтетический тест blue-parrot](https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/c/6a9d91ac-7f0c-83eb-a745-71c21114c9a8) выполнен: JSON прошёл схему и корреляцию, выдуманных событий не обнаружено. Ответ и оценка: `chatgpt-project/validation/`. Блокировки загрузки устранены. Автоматического транспорта на сайт пока нет. Secure MCP Tunnel требует runtime API key и не используется; альтернативный авторизованный HTTPS MCP ещё не реализован.
+Актуальный статус 2026-09-07: [проект Sonnic](https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/project) существует, закреплён и подключён к живому HTTPS MCP. Синтетический вызов ChatGPT прошёл claim, submit, review и completed. Сайт теперь развёрнут в owner-only personal beta: произвольный DreamInput, явное согласие, owner-bound доступ и логическое удаление проверены. Проектные файлы v1.1 ещё нужно обновить перед первым личным вызовом. Обычный ChatGPT Plus требует одного сообщения владельца для запуска каждого job.
 
-Дата: 2026-09-06. Среда: Windows, Python из `.venv`. Ниже фактические результаты этого этапа.
+Дата: 2026-09-07. Среда: Windows, Python из `.venv`. Ниже фактические результаты этого этапа.
 
 | Проверка | Результат |
 | --- | --- |
 | `scripts/build_chatgpt_package.py` | Успешно: 11 allowlisted файлов, 12 источников |
-| `python -m pytest -q --basetemp=.cache/pytest --tb=short` | **58 passed**: 33 API + 25 bridge/package |
+| `python -m pytest -q --basetemp=.cache/pytest --tb=short` | **76 passed** |
+| `npm run test:e2e` | **52 passed**: desktop + mobile |
+| `npm --workspace apps/web run build` | production build passed |
+| HTTPS owner beta smoke test | personal create → queued → cancel; payload scrubbed |
 | `scripts/check_chatgpt_bridge.py` | **queued → leased → awaiting_review → completed**, `.cache/bridge-preview.json` создан |
 | SHA256 исходного DOCX | Совпадает: `16FE214DE00DF12B5AAFD051D25C84B5329B1DACE6FEF4AB79281F91944D55DC` |
 

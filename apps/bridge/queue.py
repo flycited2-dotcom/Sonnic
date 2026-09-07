@@ -1,4 +1,4 @@
-"""Persistent, owner-scoped synthetic contract lab; no HTTP, MCP or model calls.
+"""Persistent, owner-scoped bridge queue; no HTTP, MCP or model calls.
 
 Principal comes from the authenticated HTTP adapter or trusted local tests,
 NEVER from an owner/scopes field supplied by a model.
@@ -46,10 +46,14 @@ class Queue:
             db.execute("""CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY, owner TEXT NOT NULL, request_key TEXT NOT NULL,
                 case_id TEXT NOT NULL, input TEXT NOT NULL, input_hash TEXT NOT NULL,
+                data_class TEXT NOT NULL DEFAULT 'synthetic',
                 state TEXT NOT NULL, attempt INTEGER NOT NULL DEFAULT 0,
                 created REAL NOT NULL, deadline REAL NOT NULL, lease_until REAL,
                 lease_id TEXT, claim_key TEXT, worker TEXT, output TEXT, output_hash TEXT,
                 reviewer TEXT, error TEXT, UNIQUE(owner, request_key))""")
+            columns = {row[1] for row in db.execute("PRAGMA table_info(jobs)")}
+            if "data_class" not in columns:
+                db.execute("ALTER TABLE jobs ADD COLUMN data_class TEXT NOT NULL DEFAULT 'synthetic'")
 
     @contextmanager
     def db(self):
@@ -88,6 +92,15 @@ class Queue:
             raise BridgeError("synthetic_case_required")
         case = self.cases[case_id]
         body = DreamInput(dream_text=case["dream_text"], locale=case["locale"])
+        return self._enqueue(actor, case_id, body, "synthetic", request_key)
+
+    def enqueue_dream(self, actor: Principal, body: DreamInput, request_key: UUID) -> str:
+        """Queue owner-provided text for the private beta bridge."""
+        self.require(actor, "site")
+        return self._enqueue(actor, "personal-input", body, "personal", request_key)
+
+    def _enqueue(self, actor: Principal, case_id: str, body: DreamInput, data_class: str,
+                 request_key: UUID) -> str:
         raw = serialized(body.model_dump(mode="json"))
         with self.db() as db:
             self.expire(db)
@@ -100,8 +113,9 @@ class Queue:
             if count >= 20:
                 raise BridgeError("queue_full")
             job_id = str(uuid4())
-            db.execute("INSERT INTO jobs(id,owner,request_key,case_id,input,input_hash,state,created,deadline) VALUES(?,?,?,?,?,?,'queued',?,?)",
-                       (job_id, actor.owner, str(request_key), case_id, raw, digest(raw), self.clock(), self.clock()+3600))
+            db.execute("INSERT INTO jobs(id,owner,request_key,case_id,input,input_hash,data_class,state,created,deadline) VALUES(?,?,?,?,?,?,?,'queued',?,?)",
+                       (job_id, actor.owner, str(request_key), case_id, raw, digest(raw), data_class,
+                        self.clock(), self.clock()+3600))
             return job_id
 
     def claim(self, actor: Principal, job_id: UUID, claim_key: UUID) -> JobInput:
@@ -122,7 +136,8 @@ class Queue:
                 row = self.owned(db, actor, job_id)
             body = DreamInput.model_validate_json(row["input"])
             return JobInput(job_id=UUID(row["id"]), lease_id=UUID(row["lease_id"]), attempt=row["attempt"],
-                            input_sha256=row["input_hash"], output_locale=body.locale, dream=body)
+                            input_sha256=row["input_hash"], data_class=row["data_class"],
+                            output_locale=body.locale, dream=body)
 
     def submit(self, actor: Principal, result: JobOutput) -> str:
         self.require(actor, "worker")
@@ -194,7 +209,7 @@ class Queue:
                 raise BridgeError("result_not_ready")
             result = JobOutput.model_validate_json(row["output"])
             # Do not leak internal source notes, owner, lease or correlation hashes.
-            return {"mode": "bridge_contract_preview", "origin_verified": False, "data_class": "synthetic",
+            return {"mode": "bridge_contract_preview", "origin_verified": False, "data_class": row["data_class"],
                     "locale": result.output_locale, "outcome": result.outcome,
                     "reflection": result.reflection.model_dump() if result.reflection else None,
                     "safe_message": result.safe_message}
@@ -208,11 +223,12 @@ class Queue:
             output = JobOutput.model_validate_json(row['output']) if row['output'] else None
             public = None
             if output:
-                public = {'mode': 'bridge_contract_preview', 'origin_verified': False, 'data_class': 'synthetic',
+                public = {'mode': 'bridge_contract_preview', 'origin_verified': False, 'data_class': row['data_class'],
                           'locale': output.output_locale, 'outcome': output.outcome,
                           'reflection': output.reflection.model_dump() if output.reflection else None,
                           'safe_message': output.safe_message}
             return {'job_id': row['id'], 'state': row['state'], 'attempt': row['attempt'], 'error': row['error'],
+                    'data_class': row['data_class'],
                     'case_id': row['case_id'], 'dream_text': json.loads(row['input']).get('dream_text'),
                     'can_retry': row['state'] in {'expired', 'failed'} and row['attempt'] < 3,
                     'candidate': public if row['state'] == 'awaiting_review' else None,

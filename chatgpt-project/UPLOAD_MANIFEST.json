@@ -141,8 +141,8 @@
   "files": [
     {
       "path": "PROJECT_INSTRUCTIONS.md",
-      "sha256": "ab9de856638dcdfe7e48541c9a5bbf6584a9dc375546077237b563b2ec9a7450",
-      "bytes": 8511,
+      "sha256": "eb32925b309e854b02b6ba3488e6fbba8539b807477e3401f077af241db70c6b",
+      "bytes": 8644,
       "upload_allowed": true,
       "contains_personal_dreams": false
     },
@@ -176,15 +176,15 @@
     },
     {
       "path": "BRIDGE_CONTRACT.md",
-      "sha256": "9c7aec65fc9d8b20cf4d97455d22513205f42832888a2100fc8218156be83bd1",
-      "bytes": 10048,
+      "sha256": "508a341fe0f76cf59f08e570cd3afa776ea55aa79fe749a7e38ebd1ee57e3594",
+      "bytes": 9379,
       "upload_allowed": true,
       "contains_personal_dreams": false
     },
     {
       "path": "schemas/input.schema.json",
-      "sha256": "6c3bbdddc91b10f557d9dfc06143c6076eb86e58b861ea4feb2756765b3b06c5",
-      "bytes": 3726,
+      "sha256": "a50904e937800cc6be923e7eec2e926c7fea43d4d3a0ce74492cee6313612c63",
+      "bytes": 3766,
       "upload_allowed": true,
       "contains_personal_dreams": false
     },

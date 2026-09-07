@@ -4,9 +4,9 @@ Server: 212.116.115.150 (existing SSH alias `sprintbox-itp`, port 2222).
 Public test page: https://sonnic.212.116.115.150.sslip.io/bridge
 MCP: https://sonnic.212.116.115.150.sslip.io/mcp
 
-This deploys the synthetic bridge lab, not the main personal diary or a public
-multiuser product. No OpenAI API key is present. ChatGPT must initiate the tool
-calls; submitting a website job does not wake a ChatGPT Project.
+This deploys an owner-only personal beta, not a public multiuser product. No
+OpenAI API key is present. ChatGPT must initiate the tool calls; submitting a
+website job does not wake a ChatGPT Plus Project.
 
 ## Isolation and operations
 
@@ -15,7 +15,7 @@ calls; submitting a website job does not wake a ChatGPT Project.
 - Only host binding: `127.0.0.1:3180`. Nginx serves the dedicated Sonnic hostname.
 - Containers share the API container network namespace. API8000 and web3000
   bind its loopback. Only the narrow gateway3010 is mapped to the host.
-- Named volume `sonnic_data` contains synthetic SQLite data. Do not run down -v.
+- Named volume `sonnic_data` contains beta SQLite data. Do not run down -v.
 - API provider is disabled. Gateway blocks main diary API, docs and source files.
 - Runtime memory limits total 1088 MiB. Builds may need additional memory.
 - Environment file `/opt/sonnic/source/deploy/.env` is mode600 and is not bundled.
@@ -49,3 +49,9 @@ verification passed: `/bridge` and authorization metadata200, unauthenticated
 MCP401, main dreams API/docs/.env404. OAuth client installed in ChatGPT and both
 claim_job and submit_result discovered after Refresh. End-to-end job result is
 recorded separately in docs/HANDOFF.md.
+
+The 2026-09-07 beta accepts an owner-provided DreamInput after explicit consent,
+marks it `data_class=personal`, binds browser and MCP access to the same owner,
+requires review before completion, and offers logical deletion. Do not open this
+flow to unrelated clients: the shared ChatGPT Project does not provide verified
+per-client memory isolation, and the SQLite volume is not encrypted.
