@@ -126,5 +126,5 @@ test("invalid OAuth request never presents an approval action", async ({ page })
   await page.route("**/api/v1/bridge/oauth/prepare", route => route.fulfill({ status: 400, json: { detail: "invalid_oauth_request" } }));
   await page.goto("/bridge/connect?client_id=unknown");
   await expect(page.locator('p[role="alert"]')).toContainText("Запрос подключения недействителен");
-  await expect(page.getByRole("button", { name: "Разрешить тестовый доступ" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Разрешить доступ к заданию" })).toHaveCount(0);
 });

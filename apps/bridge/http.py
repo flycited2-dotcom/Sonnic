@@ -134,7 +134,8 @@ def register_bridge(app, guest):
     def prepare(body: ConsentRequest, sid=Depends(guest)):
         handle = call(oauth().prepare, sid, body.params)
         return {'handle': handle, 'client_id': oauth().settings.client_id, 'scope': SCOPE,
-                'redirect_uri': oauth().settings.redirect_uri, 'synthetic_only': True}
+                'redirect_uri': oauth().settings.redirect_uri,
+                'synthetic_only': False, 'personal_input_enabled': True}
 
     @router.post('/api/v1/bridge/oauth/approve')
     def approve(body: ConsentDecision, sid=Depends(guest)):
