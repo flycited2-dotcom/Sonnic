@@ -243,3 +243,13 @@ def test_cancelled_job_rejects_delayed_mcp_result(client):
     snapshot = client.get('/api/v1/bridge/jobs/' + job_id).json()
     assert snapshot['state'] == 'cancelled'
     assert snapshot['dream_text'] is None and snapshot['result'] is None
+
+
+def test_delete_removes_job_and_returns_non_persistent_tombstone(client):
+    job_id = create_job(client)
+    response = client.delete('/api/v1/bridge/jobs/' + job_id)
+    assert response.status_code == 200
+    assert response.json()['state'] == 'cancelled'
+    assert response.json()['dream_text'] is None
+    assert client.get('/api/v1/bridge/jobs/' + job_id).status_code == 404
+    assert client.delete('/api/v1/bridge/jobs/' + job_id).status_code == 404

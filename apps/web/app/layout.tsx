@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Sonnic — пространство для ваших снов",
-  description: "Локальный прототип дневника и рефлексии о снах. Local dream reflection prototype.",
+  description: "Запишите сон, исследуйте его образы и найдите собственные ассоциации. Sonnic — пространство для спокойного размышления.",
   robots: { index: false, follow: false },
 };
 

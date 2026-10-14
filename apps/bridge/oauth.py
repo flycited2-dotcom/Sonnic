@@ -21,6 +21,7 @@ class BridgeSettings:
     origin: str = 'http://127.0.0.1:3000'
     client_id: str = 'sonnic-chatgpt'
     redirect_uri: str | None = None
+    public_aliases: tuple[str, ...] = ()
 
     def __post_init__(self):
         origin = urlsplit(self.origin)
@@ -28,6 +29,13 @@ class BridgeSettings:
                 or not origin.hostname or origin.scheme not in {'http', 'https'}
                 or (origin.scheme == 'http' and origin.hostname not in {'localhost', '127.0.0.1'})):
             raise ValueError('invalid_bridge_origin')
+        # Explicit HTTPS aliases preserve sessions on the previous test hostname.
+        # Never infer allowed sites from an incoming Host/Origin or accept wildcards.
+        if not isinstance(self.public_aliases, tuple) or any(
+            not isinstance(alias, str) or re.fullmatch(r'https://[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?', alias) is None
+            for alias in self.public_aliases
+        ):
+            raise ValueError('invalid_bridge_alias')
         if self.redirect_uri:
             callback = urlsplit(self.redirect_uri)
             if (callback.fragment or callback.query or callback.username or callback.password
@@ -38,6 +46,14 @@ class BridgeSettings:
     @property
     def resource(self):
         return self.origin + '/mcp'
+
+    @property
+    def allowed_origins(self):
+        return frozenset((self.origin, *self.public_aliases))
+
+    @property
+    def allowed_hosts(self):
+        return frozenset(urlsplit(origin).hostname for origin in self.allowed_origins)
 
 
 class LabOAuth:

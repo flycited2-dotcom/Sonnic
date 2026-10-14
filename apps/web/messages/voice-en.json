@@ -6,7 +6,7 @@
   "notice": "Pressing the microphone asks for browser permission and may send audio to your browser's speech service. Sonnic does not store audio. You can edit the text before submitting.",
   "unsupported": "Speech recognition is unavailable in this browser. Type your dream or try a browser that supports the Web Speech API.",
   "starting": "Connecting speech recognition… Your browser may request microphone access.",
-  "listening": "Listening… Tell your dream.",
+  "listening": "Listening… Tell your dream. Text appears after a pause or when you stop recording.",
   "stopping": "Finishing recognition…",
   "preview": "Recognized speech",
   "done": "Recognized text was added. Review and edit it before submitting.",

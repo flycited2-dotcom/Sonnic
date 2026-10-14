@@ -3,16 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { VoiceInput } from "../../components/voice-input";
 import { api, ApiError, type Locale } from "../../lib/api";
+import en from "../../messages/bridge-en.json";
+import ru from "../../messages/bridge-ru.json";
 import "./bridge.css";
 
 type Reflection = { title: string; symbols: {label: string; evidence: string}[]; summary: string; key_connection: string; reflection_question: string };
 type Result = { reflection: Reflection | null; safe_message: string | null; locale: string; outcome: string; origin_verified: false; data_class: "synthetic" | "personal" };
 type Snapshot = { job_id: string; state: string; attempt: number; error: string | null; data_class: "synthetic" | "personal"; dream_text: string | null; candidate: Result | null; result: Result | null; output_sha256: string | null; can_retry: boolean };
-type Config = { cases: {id: string; dream_text: string; locale: Locale}[]; personal_input_enabled: boolean; oauth_configured: boolean; mcp_url: string };
+type Config = { cases: {id: string; dream_text: string; locale: Locale}[]; personal_input_enabled: boolean; synthetic_only: boolean; automatic_dispatch: boolean; worker_state: string; chatgpt_connected: boolean };
+type UiLocale = "ru" | "en";
 
-const project = "https://chatgpt.com/g/g-p-6a9c47e07510819197bd898c90d1b12b-sonnic-baza-znanii-i-razbor-snov/project";
-const states: Record<string,string> = { queued: "Сон сохранён и ждёт разбора", leased: "ChatGPT разбирает сон", awaiting_review: "Разбор готов к вашей проверке", completed: "Готовый разбор", failed: "Разбор отклонён", expired: "Время ожидания истекло", cancelled: "Сон удалён" };
-const errors: Record<string,string> = { session_required: "Сессия закончилась. Начните заново.", job_not_found: "Задание недоступно в текущем браузере.", queue_full: "Очередь временно заполнена. Завершите или удалите прежнее задание.", connection_failed: "Не удалось связаться с сервером. Повторите действие.", review_changed: "Ответ изменился. Обновите статус и проверьте его заново.", retry_not_allowed: "Повтор больше недоступен.", not_awaiting_review: "Этот ответ уже проверен или устарел.", review_rejected: "Вы отклонили разбор. Можно запустить повтор.", lease_expired: "ChatGPT не успел вернуть ответ. Можно повторить обработку.", job_expired: "Срок ожидания закончился. Можно повторить обработку.", invalid_input: "Проверьте текст сна: нужно от 20 до 10 000 символов." };
+const messages = { ru, en };
+function lookup(values: Record<string,string>, key: string, fallback: string) {
+  return values[key] || fallback;
+}
 
 function Card({value}: {value: Result}) {
   const reflection = value.reflection;
@@ -22,6 +26,8 @@ function Card({value}: {value: Result}) {
 }
 
 export default function BridgePage() {
+  const [uiLocale,setUiLocale]=useState<UiLocale>("ru");
+  const t=messages[uiLocale];
   const [config,setConfig]=useState<Config|null>(null);
   const [dreamText,setDreamText]=useState("");
   const [wakeEmotion,setWakeEmotion]=useState("");
@@ -30,79 +36,146 @@ export default function BridgePage() {
   const [consent,setConsent]=useState(false);
   const [voiceBusy,setVoiceBusy]=useState(false);
   const [jobId,setJobId]=useState<string|null>(null), [snapshot,setSnapshot]=useState<Snapshot|null>(null);
-  const [claimKey,setClaimKey]=useState(""), [revision,setRevision]=useState(0), [busy,setBusy]=useState(false);
-  const [error,setError]=useState(""), [notice,setNotice]=useState(""), [checkedHash,setCheckedHash]=useState<string|null>(null);
+  const [revision,setRevision]=useState(0), [busy,setBusy]=useState(false);
+  const [errorCode,setErrorCode]=useState(""), [deletedNotice,setDeletedNotice]=useState(false);
   const [unavailable,setUnavailable]=useState(false), [configRevision,setConfigRevision]=useState(0);
+  const [configError,setConfigError]=useState(false);
+  const resultRef=useRef<HTMLElement>(null);
   const requestKey=useRef<{fingerprint:string; key:string}|null>(null);
   const generation=useRef(0), operation=useRef(false);
 
   function fail(value: unknown) {
     const code=value instanceof ApiError?value.code:"unknown";
-    setError(errors[code]||"Действие не выполнено. Обновите статус и попробуйте снова.");
+    setErrorCode(code);
     if(code==="session_required"||code==="job_not_found") {setUnavailable(true);setSnapshot(null);}
   }
-  useEffect(()=>{ let stopped=false; void api<Config>("/bridge/config").then(value=>{if(stopped)return;setConfig(value);setError("");}).catch(value=>{if(!stopped)fail(value);}); return()=>{stopped=true;}; },[configRevision]);
-  useEffect(()=>{ try { const linked=new URLSearchParams(window.location.search).get("job"); const id=linked||sessionStorage.getItem("sonnic.bridge.job"); if(id&&/^[a-f0-9-]{36}$/i.test(id)){const key=sessionStorage.getItem(`sonnic.bridge.claim.${id}`)||crypto.randomUUID();setJobId(id);setClaimKey(key);sessionStorage.setItem(`sonnic.bridge.claim.${id}`,key);window.history.replaceState(null,"",`/bridge?job=${id}`);} }catch{} },[]);
+  useEffect(()=>{try{const saved=localStorage.getItem("sonnic.bridge.uiLocale");if(saved==="ru"||saved==="en"){setUiLocale(saved);setLocale(saved==="ru"?"ru-RU":"en-US");}}catch{}},[]);
   useEffect(()=>{
-    if(!jobId||busy||unavailable) return;
+    document.documentElement.lang=uiLocale;
+    const updateTitle=()=>{if(document.title!==t.documentTitle)document.title=t.documentTitle;};
+    updateTitle();
+    // Next applies static layout metadata during hydration. Keep the visible
+    // tab title aligned with the client-side language after those mutations.
+    const timer=setTimeout(updateTitle,0);
+    const observer=new MutationObserver(updateTitle);
+    observer.observe(document.head,{childList:true,subtree:true,characterData:true});
+    try{localStorage.setItem("sonnic.bridge.uiLocale",uiLocale);}catch{}
+    return()=>{clearTimeout(timer);observer.disconnect();};
+  },[uiLocale,t.documentTitle]);
+  useEffect(()=>{ let stopped=false; let timer:ReturnType<typeof setTimeout>; async function poll(){try{const value=await api<Config>("/bridge/config");if(!stopped){setConfig(value);setConfigError(false);}}catch{if(!stopped){setConfigError(true);setConfig(value=>value?{...value,chatgpt_connected:false}:null);}}finally{if(!stopped)timer=setTimeout(poll,10000);}} void poll(); return()=>{stopped=true;clearTimeout(timer);}; },[configRevision]);
+  useEffect(()=>{if(snapshot?.result)resultRef.current?.focus();},[snapshot?.state]);
+  useEffect(()=>{ try { const linked=new URLSearchParams(window.location.search).get("job"); const id=linked||sessionStorage.getItem("sonnic.bridge.job"); if(id&&/^[a-f0-9-]{36}$/i.test(id)){setJobId(id);window.history.replaceState(null,"",`/bridge?job=${id}`);} }catch{} },[]);
+  useEffect(()=>{
+    if(!jobId||busy||unavailable||snapshot?.state==="cancelled") return;
     const version=generation.current;
     let stopped=false; let timer:ReturnType<typeof setTimeout>;
-    async function poll(){try { const next=await api<Snapshot>(`/bridge/jobs/${jobId}`); if(stopped||version!==generation.current)return; setSnapshot(next); setCheckedHash(current=>current===next.output_sha256?current:null); if(["queued","leased","awaiting_review"].includes(next.state))timer=setTimeout(poll,1500); }catch(value){if(!stopped&&version===generation.current)fail(value);}}
+    let failures=0;
+    async function poll(){
+      try {
+        const next=await api<Snapshot>(`/bridge/jobs/${jobId}`);
+        if(stopped||version!==generation.current)return;
+        failures=0;setErrorCode("");setSnapshot(next);
+        if(["queued","leased","awaiting_review"].includes(next.state))timer=setTimeout(poll,1500);
+      }catch(value){
+        if(stopped||version!==generation.current)return;
+        fail(value);
+        // Recover reads only; never recreate or retry the model job after a network error.
+        if(value instanceof ApiError&&value.code==="connection_failed"&&failures<3){
+          timer=setTimeout(poll,2000*2**failures++);
+        }
+      }
+    }
     void poll(); return()=>{stopped=true;clearTimeout(timer);};
   },[jobId,revision,busy,unavailable]);
 
-  function insertExample(){const sample=config?.cases.find(item=>item.id==="blue-parrot-ru")||config?.cases[0];if(sample){setDreamText(sample.dream_text);setLocale(sample.locale);setRecognitionLocale(null);requestKey.current=null;}}
+  function insertExample(){const wanted=uiLocale==="ru"?"ru-RU":"en-US";const sample=config?.cases.find(item=>item.locale===wanted)||config?.cases[0];if(sample){setDreamText(sample.dream_text);setLocale(sample.locale);setRecognitionLocale(null);requestKey.current=null;}}
   async function create(){
     const clean=dreamText.trim();
-    if(operation.current||voiceBusy||clean.length<20||clean.length>10000||!consent)return;
-    operation.current=true;generation.current++;setBusy(true);setError("");setNotice("");
+    if(operation.current||voiceBusy||clean.length<20||clean.length>10000||!consent||!config?.chatgpt_connected)return;
+    operation.current=true;generation.current++;setBusy(true);setErrorCode("");setDeletedNotice(false);
     try{
       await api("/sessions/guest",{method:"POST",body:JSON.stringify({locale})});
       const fingerprint=JSON.stringify([clean,wakeEmotion.trim(),locale,recognitionLocale]);
       if(requestKey.current?.fingerprint!==fingerprint) requestKey.current={fingerprint,key:crypto.randomUUID()};
-      const job=await api<{job_id:string}>("/bridge/jobs",{method:"POST",headers:{"Idempotency-Key":requestKey.current.key},body:JSON.stringify({dream:{dream_text:clean,wake_emotion:wakeEmotion.trim(),locale,content_language:locale==="ru-RU"?"ru":"en",recognition_locale:recognitionLocale}})});
-      const key=crypto.randomUUID();setClaimKey(key);setJobId(job.job_id);setSnapshot(null);setCheckedHash(null);setUnavailable(false);
-      try{sessionStorage.setItem("sonnic.bridge.job",job.job_id);sessionStorage.setItem(`sonnic.bridge.claim.${job.job_id}`,key);window.history.replaceState(null,"",`/bridge?job=${job.job_id}`);}catch{}
+      const job=await api<{job_id:string}>("/bridge/jobs",{method:"POST",headers:{"Idempotency-Key":requestKey.current.key},body:JSON.stringify({synthetic:config?.synthetic_only===true,dream:{dream_text:clean,wake_emotion:wakeEmotion.trim(),locale,content_language:locale==="ru-RU"?"ru":"en",recognition_locale:recognitionLocale}})});
+      setJobId(job.job_id);setSnapshot(null);setUnavailable(false);
+      try{sessionStorage.setItem("sonnic.bridge.job",job.job_id);window.history.replaceState(null,"",`/bridge?job=${job.job_id}`);}catch{}
     }catch(value){fail(value);}finally{operation.current=false;setBusy(false);}
   }
-  async function action(name:string){
+  async function action(name:"retry"|"delete"){
     if(operation.current||!jobId)return;
-    if((name==="review"||name==="reject")&&(!snapshot?.output_sha256||snapshot.state!=="awaiting_review"))return;
-    if(name==="review"&&checkedHash!==snapshot?.output_sha256)return;
-    operation.current=true;generation.current++;setBusy(true);setError("");setNotice("");
+    if(name==="retry"&&(!config?.chatgpt_connected||snapshot?.error==="submission_uncertain"))return;
+    operation.current=true;generation.current++;setBusy(true);setErrorCode("");setDeletedNotice(false);
     try{
-      const body=name==="review"||name==="reject"?JSON.stringify({approve:name==="review",output_sha256:snapshot?.output_sha256}):undefined;
-      const next=await api<Snapshot>(`/bridge/jobs/${jobId}/${name==="reject"?"review":name}`,{method:"POST",body});
-      setSnapshot(next);setCheckedHash(null);setRevision(value=>value+1);
-      if(name==="cancel"){setNotice("Текст сна и результат удалены с сервера.");}
-    }catch(value){setCheckedHash(null);fail(value);}finally{operation.current=false;setBusy(false);}
+      const path=name==="delete"?`/bridge/jobs/${jobId}`:`/bridge/jobs/${jobId}/retry`;
+      const next=await api<Snapshot>(path,{method:name==="delete"?"DELETE":"POST"});
+      setSnapshot(next);
+      if(name==="delete"){
+        setDeletedNotice(true);
+        try{sessionStorage.removeItem("sonnic.bridge.job");sessionStorage.removeItem(`sonnic.bridge.claim.${jobId}`);window.history.replaceState(null,"","/bridge");}catch{}
+      }else setRevision(value=>value+1);
+    }catch(value){fail(value);}finally{operation.current=false;setBusy(false);}
   }
-  function refresh(){generation.current++;setError("");setRevision(value=>value+1);}
-  function reset(){generation.current++;setJobId(null);setSnapshot(null);setClaimKey("");setCheckedHash(null);setUnavailable(false);requestKey.current=null;setError("");setNotice("");setConsent(false);try{sessionStorage.removeItem("sonnic.bridge.job");window.history.replaceState(null,"","/bridge");}catch{}}
-  const task=`Задание Sonnic. Через подключённый мост вызови claim_job с job_id "${jobId}" и claim_key "${claimKey}". Обработай только это задание по инструкциям проекта. Затем передай полный JSON строго по output.schema.json через submit_result с неизменными идентификаторами, версиями, хешем и attempt. Не повторяй личный текст сна в чате сверх необходимого и не сохраняй его в память. Не утверждай публикацию: ответ сначала ждёт проверки на сайте. Если инструмента нет, сообщи «мост не подключён»; не выдумывай выполнение.`;
+  function refresh(){generation.current++;setErrorCode("");setRevision(value=>value+1);}
+  function reset(){generation.current++;setJobId(null);setSnapshot(null);setUnavailable(false);requestKey.current=null;setErrorCode("");setDeletedNotice(false);setConsent(false);setDreamText("");setWakeEmotion("");setRecognitionLocale(null);try{sessionStorage.removeItem("sonnic.bridge.job");window.history.replaceState(null,"","/bridge");}catch{}}
 
-  return <div className="site-shell bridge-shell"><header className="header"><a className="brand" href="/">sonnic.</a><span>Закрытое бета-тестирование</span></header><main>
-    <div className="mode-banner"><div><strong>Рабочий разбор через ваш проект ChatGPT</strong><span>Сайт передаёт сон в подключённый MCP-мост. Из-за ограничений обычной подписки ChatGPT запуск пока требует одного действия в проекте; API-ключ OpenAI не используется.</span></div></div>
-    {error&&<p className="error" role="alert">{error}</p>}{notice&&<p className="notice" role="status">{notice}</p>}
-    {!config&&error&&<button className="secondary" onClick={()=>{setError("");setConfigRevision(value=>value+1);}}>Повторить подключение</button>}
-    {!jobId?<section className="input-card"><p className="eyebrow">ШАГ 1 ИЗ 3</p><h1>Расскажите свой сон</h1><p className="muted">Можно напечатать или надиктовать. Перед отправкой текст всегда можно исправить.</p>
-      <div className="bridge-field-head"><label htmlFor="bridge-dream">Ваш сон</label><button type="button" className="text-button" onClick={insertExample}>Вставить пример</button></div>
-      <textarea id="bridge-dream" value={dreamText} rows={8} maxLength={10000} placeholder="Например: мне приснился синий попугай…" disabled={busy} onChange={event=>{setDreamText(event.target.value);requestKey.current=null;}}/>
-      <div className="field-help bridge-counter">От 20 до 10 000 символов <span>{dreamText.length} / 10 000</span></div>
-      <VoiceInput locale={locale} text={dreamText} disabled={busy} onBusy={setVoiceBusy} onText={(text,language)=>{setDreamText(text);setRecognitionLocale(language);requestKey.current=null;}}/>
-      <label htmlFor="bridge-emotion">Чувство после пробуждения <small>необязательно</small></label><input id="bridge-emotion" value={wakeEmotion} maxLength={120} placeholder="Например, удивление или спокойствие" disabled={busy} onChange={event=>{setWakeEmotion(event.target.value);requestKey.current=null;}}/>
-      <label htmlFor="bridge-locale">Язык результата</label><select id="bridge-locale" value={locale} disabled={busy} onChange={event=>{setLocale(event.target.value as Locale);requestKey.current=null;}}><option value="ru-RU">Русский</option><option value="en-US">English</option></select>
-      <label className="check-label privacy-check"><input type="checkbox" checked={consent} disabled={busy} onChange={event=>setConsent(event.target.checked)}/><span>Я согласен отправить этот текст в мой проект ChatGPT для разбора. Аудио Sonnic не сохраняет; текст хранится на тестовом сервере до удаления.</span></label>
-      <button className="primary" disabled={busy||voiceBusy||dreamText.trim().length<20||dreamText.trim().length>10000||!consent} onClick={()=>void create()}>{busy?"Сохраняем сон…":"Передать сон на разбор"}</button>
-    </section>:<>
-      <section className="input-card"><p className="eyebrow">{snapshot?.data_class==="personal"?"ШАГ 2 ИЗ 3 · ВАШ СОН":"ТЕСТОВЫЙ ПРИМЕР"}</p><h1 aria-live="polite">{unavailable?"Задание недоступно":snapshot?states[snapshot.state]||snapshot.state:error?"Не удалось загрузить статус":"Загружаем статус…"}</h1>{snapshot?.dream_text&&<p className="bridge-dream">{snapshot.dream_text}</p>}{snapshot&&<p className="muted">Попытка: {snapshot.attempt} из 3</p>}
-      {snapshot?.error&&<p className="error" role="status">{errors[snapshot.error]||"Обработка не завершилась. Обновите статус или запустите повтор."}</p>}
-      {snapshot?.state==="queued"&&<><ol className="bridge-steps"><li>Нажмите «Скопировать задание».</li><li>Откройте проект ChatGPT и вставьте текст в новый чат.</li><li>Вернитесь сюда: статус обновится автоматически.</li></ol><div className="bridge-actions"><button className="primary" onClick={()=>{void navigator.clipboard.writeText(task).then(()=>setNotice("Задание скопировано — теперь откройте ChatGPT и отправьте его.")).catch(()=>setError("Не удалось скопировать. Выделите текст ниже вручную."));}}>1. Скопировать задание</button><a className="secondary" href={project} target="_blank" rel="noreferrer">2. Открыть проект ChatGPT</a></div><details><summary>Показать текст задания</summary><textarea aria-label="Текст задания для ChatGPT" readOnly value={task} rows={7}/></details></>}
-      {snapshot?.state==="leased"&&<p>Проект ChatGPT получил задание. Оставьте чат открытым до сообщения об отправке результата, затем вернитесь на эту страницу.</p>}
-      <div className="bridge-actions">{!unavailable&&<button className="secondary" disabled={busy} onClick={refresh}>Обновить статус</button>}{snapshot&&["queued","leased","awaiting_review","completed"].includes(snapshot.state)&&<button className="secondary danger" disabled={busy} onClick={()=>void action("cancel")}>Удалить сон с сервера</button>}{snapshot?.can_retry&&<button className="secondary" disabled={busy} onClick={()=>void action("retry")}>Повторить обработку</button>}{(unavailable||snapshot&&["completed","cancelled","failed","expired"].includes(snapshot.state))&&<button className="secondary" disabled={busy} onClick={reset}>Записать другой сон</button>}</div></section>
-      {snapshot?.state==="awaiting_review"&&snapshot.candidate&&<section aria-label="Проверка разбора"><p className="eyebrow">ШАГ 3 ИЗ 3</p><h2>Проверьте разбор</h2><p>Сверьте детали с исходным сном. Формулировки являются возможной интерпретацией для размышления.</p><Card value={snapshot.candidate}/><label className="check-label"><input type="checkbox" disabled={busy} checked={!!snapshot.output_sha256&&checkedHash===snapshot.output_sha256} onChange={event=>setCheckedHash(event.target.checked?snapshot.output_sha256:null)}/>Я проверил, что разбор опирается на мой рассказ и не добавляет вымышленные события</label><div className="bridge-actions"><button className="primary" disabled={busy||!snapshot.output_sha256||checkedHash!==snapshot.output_sha256} onClick={()=>void action("review")}>Принять разбор</button><button className="secondary" disabled={busy} onClick={()=>void action("reject")}>Отклонить и повторить</button></div></section>}
-      {snapshot?.result&&<section aria-label="Готовый разбор"><h2>Ваш разбор</h2><Card value={snapshot.result}/><p className="field-help">Это возможная интерпретация для саморазмышления, а не прогноз событий и не диагноз.</p></section>}
-    </>}
-    <details className="bridge-setup"><summary>Техническая информация</summary><p>Адрес MCP: <code>{config?.mcp_url}</code></p><p>{config?.oauth_configured?"Плагин Sonnic подключён. Если ChatGPT попросит авторизацию, разрешите её в этом же браузере.":"OAuth-мост ещё не настроен."}</p><button className="secondary" onClick={()=>void api("/bridge/connections/revoke",{method:"POST"}).then(()=>setNotice("Доступ ChatGPT к этой сессии отозван")).catch(fail)}>Отозвать доступ ChatGPT</button></details>
-  </main></div>;
+  const uiVoiceLocale:Locale=uiLocale==="ru"?"ru-RU":"en-US";
+  const cleanLength=dreamText.trim().length;
+  const submitBlocked=busy||voiceBusy||!config?.chatgpt_connected||cleanLength<20||cleanLength>10000||!consent;
+  const submitHelp=busy?t.saving:voiceBusy?t.submitRecording:
+    configError?t.configError:!config?t.submitChecking:!config.chatgpt_connected?t.submitUnavailable:
+    cleanLength<20?t.submitTooShort.replace("{remaining}",String(20-cleanLength)):
+    cleanLength>10000?t.submitTooLong:!consent?t.submitConsent:t.submitReady;
+  return <div className="site-shell bridge-shell">
+    <a className="bridge-skip" href="#bridge-main">{t.skip}</a>
+    <header className="header">
+      <a className="brand" href="/bridge" aria-label={t.homeAria}>☾ sonnic.</a>
+      <nav aria-label={t.navigationAria}>
+        <a href="#how-it-works">{t.howLink}</a><span>{t.beta}</span>
+        <button type="button" className="bridge-language" disabled={voiceBusy} aria-label={t.switchLanguage} onClick={()=>{const next=uiLocale==="ru"?"en":"ru";setUiLocale(next);setLocale(next==="ru"?"ru-RU":"en-US");requestKey.current=null;}}>{uiLocale==="ru"?"EN":"RU"}</button>
+      </nav>
+    </header>
+    <main id="bridge-main">
+      <div className="mode-banner"><div><strong>{t.bannerTitle}</strong><span>{config?.personal_input_enabled===true?t.bannerPersonal:t.bannerSynthetic}</span>{config&&!config.chatgpt_connected&&<span role="status">{config.automatic_dispatch?t.bannerUnavailable:t.bannerDisconnected}</span>}</div></div>
+      {errorCode&&jobId&&<p className="error" role="alert">{lookup(t.errors,errorCode,t.errorFallback)}</p>}
+      {deletedNotice&&<p className="notice" role="status">{t.deletedNotice}</p>}
+      {configError&&<div className="error" role="alert">{t.configError} <button className="text-button" onClick={()=>setConfigRevision(value=>value+1)}>{t.retryConnection}</button></div>}
+      {!jobId?<div className="bridge-entry-grid">
+        <aside className="bridge-intro"><p className="eyebrow">{t.introEyebrow}</p><h2>{t.introTitle}<br/><em>{t.introTitleEmphasis}</em></h2><p>{t.introBody}</p><div className="bridge-moon" aria-hidden="true">☾<span>✦</span></div><p className="field-help">{t.introHelp}</p></aside>
+        <section className="input-card"><p className="eyebrow">{t.storyEyebrow}</p><h1>{t.formTitle}</h1><p className="muted">{t.formDescription}</p>
+          <div className="bridge-field-head"><label htmlFor="bridge-dream">{t.dreamLabel}</label><button type="button" className="text-button" disabled={busy||voiceBusy||!config} onClick={insertExample}>{t.example}</button></div>
+          <textarea id="bridge-dream" value={dreamText} rows={7} maxLength={10000} aria-describedby="bridge-limit" placeholder={t.dreamPlaceholder} readOnly={busy||voiceBusy} onChange={event=>{setDreamText(event.target.value);requestKey.current=null;}}/>
+          <div id="bridge-limit" className="field-help bridge-counter">{t.limit} <span>{cleanLength} / 10 000</span></div>
+          <VoiceInput locale={locale} uiLocale={uiVoiceLocale} text={dreamText} disabled={busy} onBusy={setVoiceBusy} onText={(text,language)=>{setDreamText(text);setRecognitionLocale(language);requestKey.current=null;}}/>
+          <label htmlFor="bridge-emotion">{t.emotionLabel} <small>{t.optional}</small></label><input id="bridge-emotion" value={wakeEmotion} maxLength={120} placeholder={t.emotionPlaceholder} disabled={busy} onChange={event=>{setWakeEmotion(event.target.value);requestKey.current=null;}}/>
+          <label htmlFor="bridge-locale">{t.resultLanguage}</label><select id="bridge-locale" value={locale} disabled={busy||voiceBusy} onChange={event=>{setLocale(event.target.value as Locale);requestKey.current=null;}}><option value="ru-RU">{t.russian}</option><option value="en-US">{t.english}</option></select>
+          <label className="check-label privacy-check"><input type="checkbox" checked={consent} disabled={busy} onChange={event=>setConsent(event.target.checked)}/><span>{config?.synthetic_only?t.syntheticConsent:""}{t.consent}</span></label>
+          <p id="bridge-submit-help" className="field-help" role="status">{submitHelp}</p>
+          {errorCode&&<p id="bridge-submit-error" className="error" role="alert">{lookup(t.errors,errorCode,t.errorFallback)}</p>}
+          <button className="primary" aria-describedby={`bridge-submit-help${errorCode?" bridge-submit-error":""}`} disabled={submitBlocked} onClick={()=>void create()}>{busy?t.saving:t.submit}</button>
+        </section>
+      </div>:<>
+        <section className="input-card">
+          <p className="eyebrow">{snapshot?.data_class==="personal"?t.personalEyebrow:t.testEyebrow}</p>
+          <h1 aria-live="polite">{unavailable?t.unavailableTitle:snapshot?lookup(t.states,snapshot.state,snapshot.state):errorCode?t.statusLoadFailed:t.statusLoading}</h1>
+          {snapshot?.dream_text&&<p className="bridge-dream">{snapshot.dream_text}</p>}
+          {snapshot&&<p className="muted">{t.attempt}: {snapshot.attempt} {t.attemptOf}</p>}
+          {snapshot?.error&&<p className="error" role="status">{lookup(t.errors,snapshot.error,t.snapshotErrorFallback)}</p>}
+          {snapshot&&["queued","leased","completed"].includes(snapshot.state)&&<ol className="bridge-progress" aria-label={t.progressAria}>{t.progressLabels.map((label,index)=><li key={label} aria-current={index===(snapshot.state==="queued"?0:snapshot.state==="leased"?1:2)?"step":undefined}><span aria-hidden="true">{index+1}</span>{label}</li>)}</ol>}
+          {snapshot?.state==="queued"&&<p>{t.queuedBody}</p>}
+          {snapshot?.state==="leased"&&<p>{t.leasedBody}</p>}
+          <div className="bridge-actions">
+            {!unavailable&&snapshot?.state!=="cancelled"&&<button className="secondary" disabled={busy} onClick={refresh}>{t.refresh}</button>}
+            {snapshot&&["queued","leased","awaiting_review","completed","failed","expired"].includes(snapshot.state)&&<button className="secondary danger" disabled={busy} onClick={()=>void action("delete")}>{t.delete}</button>}
+            {snapshot?.can_retry&&snapshot.error!=="submission_uncertain"&&<button className="secondary" disabled={busy||!config?.chatgpt_connected} onClick={()=>void action("retry")}>{t.retry}</button>}
+            {(unavailable||snapshot&&["completed","cancelled","failed","expired"].includes(snapshot.state))&&<button className="secondary" disabled={busy} onClick={reset}>{t.newDream}</button>}
+          </div>
+        </section>
+        {snapshot?.result&&<section ref={resultRef} tabIndex={-1} className="bridge-result" aria-label={t.resultRegion}><h2>{t.resultTitle}</h2><Card value={snapshot.result}/><p className="field-help">{t.resultDisclaimer}</p></section>}
+      </>}
+      <section id="how-it-works" className="bridge-about" aria-labelledby="bridge-about-title"><p className="eyebrow">{t.aboutEyebrow}</p><h2 id="bridge-about-title">{t.aboutTitle}</h2><div className="bridge-explainer">{t.aboutSteps.map((step,index)=><article key={step.title}><span>{String(index+1).padStart(2,"0")}</span><h3>{step.title}</h3><p>{step.body}</p></article>)}</div></section>
+      <section className="bridge-faq" aria-label={t.faqAria}><h2>{t.faqTitle}</h2>{t.faqs.map(item=><details key={item.question}><summary>{item.question}</summary><p>{item.answer}</p></details>)}</section>
+    </main>
+    <footer><span>{t.footerPrimary}</span><span>{t.footerDisclaimer}</span></footer>
+  </div>;
 }

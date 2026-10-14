@@ -18,11 +18,11 @@ type Recognition = {
 type SpeechWindow = Window & { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
 type State = "idle" | "starting" | "listening" | "stopping";
 
-export function VoiceInput({ locale, text, disabled, onText, onBusy }: {
-  locale: Locale; text: string; disabled: boolean;
+export function VoiceInput({ locale, uiLocale, text, disabled, onText, onBusy }: {
+  locale: Locale; uiLocale?: Locale; text: string; disabled: boolean;
   onText: (text: string, recognitionLocale: string) => void; onBusy: (busy: boolean) => void;
 }) {
-  const t = locale === "ru-RU" ? ru : en;
+  const t = (uiLocale ?? locale) === "ru-RU" ? ru : en;
   const [supported, setSupported] = useState<boolean | null>(null);
   const [language, setLanguage] = useState("ru-RU");
   const [state, setState] = useState<State>("idle");
@@ -127,7 +127,10 @@ export function VoiceInput({ locale, text, disabled, onText, onBusy }: {
     };
     setState("starting"); onBusy(true);
     timer.current = setTimeout(() => fail("timeout"), 20000);
-    try { rec.lang = language; rec.continuous = true; rec.interimResults = true; rec.start(); }
+    // Some mobile providers expose growing partial hypotheses as final slots.
+    // Request final phrases only instead of deleting repeated words afterwards:
+    // repetitions in the user's actual speech must remain intact.
+    try { rec.lang = language; rec.continuous = true; rec.interimResults = false; rec.start(); }
     catch (err) { fail(exceptionCode(err)); }
   }
 

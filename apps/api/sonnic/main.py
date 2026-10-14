@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from contextlib import asynccontextmanager
 from uuid import UUID
-from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
@@ -17,6 +16,7 @@ from .real_provider import AISettings, OpenAIProvider
 from apps.bridge.queue import Queue
 from apps.bridge.oauth import BridgeSettings, LabOAuth
 from apps.bridge.http import register_bridge
+from apps.bridge.dispatch import DispatchSettings, register_dispatch
 
 load_dotenv(Path(__file__).resolve().parents[3] / ".env")
 COOKIE = "sonnic_guest"
@@ -24,10 +24,12 @@ ALLOWED_ORIGINS = {"http://127.0.0.1:3000", "http://localhost:3000", "http://127
 
 
 def create_app(db_path: str | None = None, provider: Provider | None = None, mode: str | None = None,
-               bridge_settings: BridgeSettings | None = None):
+               bridge_settings: BridgeSettings | None = None, dispatch_settings: DispatchSettings | None = None):
+    dispatch = dispatch_settings or DispatchSettings.from_env()
     bridge = bridge_settings or BridgeSettings(origin=os.getenv('SONNIC_BRIDGE_ORIGIN', 'http://127.0.0.1:3000'),
         client_id=os.getenv('SONNIC_BRIDGE_CLIENT_ID', 'sonnic-chatgpt'),
-        redirect_uri=os.getenv('SONNIC_BRIDGE_REDIRECT_URI') or None)
+        redirect_uri=os.getenv('SONNIC_BRIDGE_REDIRECT_URI') or None,
+        public_aliases=tuple(filter(None, os.getenv('SONNIC_BRIDGE_ALIASES', '').split(','))))
     ai_mode = mode or os.getenv("AI_MODE", "demo")
     if ai_mode not in {"demo", "disabled", "real"}:
         raise RuntimeError("AI_MODE must be demo, real or disabled")
@@ -40,7 +42,8 @@ def create_app(db_path: str | None = None, provider: Provider | None = None, mod
         store = Store(db_path or os.getenv("SONNIC_DB_PATH", "data/sonnic.sqlite3"))
         store.recover()
         app.state.store = store
-        app.state.bridge_queue = Queue(Path(str(store.path) + '.bridge.sqlite3'))
+        app.state.dispatch_settings = dispatch
+        app.state.bridge_queue = Queue(Path(str(store.path) + '.bridge.sqlite3'), job_ttl=600 if dispatch.enabled else 3600)
         app.state.bridge_oauth = LabOAuth(app.state.bridge_queue, bridge)
         app.state.orchestrator = Orchestrator(store, selected_provider)
         yield
@@ -52,10 +55,10 @@ def create_app(db_path: str | None = None, provider: Provider | None = None, mod
     async def local_boundary(request: Request, call_next):
         origin = request.headers.get("origin")
         bridge_path = request.url.path.startswith(('/api/v1/bridge', '/oauth/', '/.well-known/')) or request.url.path == '/mcp'
-        if bridge_path and request.url.hostname not in {'127.0.0.1', 'localhost', 'testserver', urlsplit(bridge.origin).hostname}:
+        if bridge_path and request.url.hostname not in bridge.allowed_hosts | {'127.0.0.1', 'localhost', 'testserver'}:
             return JSONResponse({'detail': 'host_not_allowed'}, status_code=400)
         machine_path = request.url.path in {'/mcp', '/oauth/token'}
-        permitted_origins = ALLOWED_ORIGINS | {bridge.origin} | ({'https://chatgpt.com'} if machine_path else set())
+        permitted_origins = ALLOWED_ORIGINS | bridge.allowed_origins | ({'https://chatgpt.com'} if machine_path else set())
         if bridge_path and origin and origin not in permitted_origins:
             return JSONResponse({'detail': 'origin_not_allowed'}, status_code=403)
         if request.method not in {"GET", "HEAD", "OPTIONS"} and (
@@ -167,6 +170,7 @@ def create_app(db_path: str | None = None, provider: Provider | None = None, mod
         return Response(status_code=204)
 
     register_bridge(app, guest)
+    register_dispatch(app)
     return app
 
 

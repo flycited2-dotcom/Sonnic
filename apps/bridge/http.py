@@ -18,6 +18,7 @@ VERSIONS = {'2025-03-26', '2025-06-18', '2025-11-25'}
 class Enqueue(Model):
     case_id: str | None = Field(default=None, min_length=1, max_length=100)
     dream: DreamInput | None = None
+    synthetic: StrictBool = False
 
     @model_validator(mode='after')
     def exactly_one_input(self):
@@ -71,18 +72,28 @@ def register_bridge(app, guest):
 
     @router.get('/api/v1/bridge/config')
     def config():
-        return {'synthetic_only': False, 'personal_input_enabled': True,
-                'automatic_dispatch': False, 'chatgpt_connected': False,
+        settings = app.state.dispatch_settings
+        state = queue().availability() if settings.enabled else 'offline'
+        return {'synthetic_only': settings.enabled and not settings.allow_personal,
+                'personal_input_enabled': not settings.enabled or settings.allow_personal,
+                'automatic_dispatch': settings.enabled, 'worker_state': state,
+                'chatgpt_connected': state in {'ready', 'busy'},
                 'mcp_url': oauth().settings.resource, 'oauth_configured': bool(oauth().settings.redirect_uri),
                 'cases': [{'id': c['id'], 'dream_text': c['dream_text'], 'locale': c['locale']} for c in queue().cases.values()]}
 
     @router.post('/api/v1/bridge/jobs', status_code=201)
     def enqueue(body: Enqueue, sid=Depends(guest), idempotency_key: UUID = Header()):
+        settings = app.state.dispatch_settings
+        if settings.enabled and queue().availability() not in {'ready', 'busy'}:
+            raise HTTPException(503, 'worker_unavailable')
         if body.dream is not None:
-            job_id = call(queue().enqueue_dream, actor(sid), body.dream, idempotency_key)
+            if settings.enabled and not settings.allow_personal and not body.synthetic:
+                raise HTTPException(403, 'synthetic_input_required')
+            job_id = call(queue()._enqueue, actor(sid), 'synthetic-input' if body.synthetic else 'personal-input',
+                          body.dream, 'synthetic' if body.synthetic else 'personal', idempotency_key)
         else:
             job_id = call(queue().enqueue, actor(sid), body.case_id, idempotency_key)
-        return {'job_id': job_id, 'automatic_dispatch': False}
+        return {'job_id': job_id, 'automatic_dispatch': settings.enabled}
 
     @router.get('/api/v1/bridge/jobs/{job_id}')
     def snapshot(job_id: UUID, sid=Depends(guest)):
@@ -102,6 +113,10 @@ def register_bridge(app, guest):
     def cancel(job_id: UUID, sid=Depends(guest)):
         call(queue().cancel, actor(sid), job_id)
         return call(queue().snapshot_for_site, actor(sid), job_id)
+
+    @router.delete('/api/v1/bridge/jobs/{job_id}')
+    def delete(job_id: UUID, sid=Depends(guest)):
+        return call(queue().delete, actor(sid), job_id)
 
     @router.post('/api/v1/bridge/connections/revoke', status_code=204)
     def revoke(sid=Depends(guest)):

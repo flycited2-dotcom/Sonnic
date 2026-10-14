@@ -7,7 +7,6 @@ Next assets. This module does not start a tunnel or grant external access.
 from contextlib import asynccontextmanager
 import os
 import re
-from urllib.parse import urlsplit
 
 import httpx
 from fastapi import FastAPI, Request
@@ -28,7 +27,12 @@ RESPONSE_HEADERS = {
 
 
 def route_for(path: str, method: str):
-    if path in {'/bridge', '/bridge/connect'} and method in READ:
+    if method == 'POST' and path in {
+        '/api/v1/bridge/worker/heartbeat', '/api/v1/bridge/worker/claim',
+        '/api/v1/bridge/worker/renew', '/api/v1/bridge/worker/fail', '/api/v1/bridge/worker/submit',
+    }:
+        return 'api'
+    if path in {'/bridge', '/bridge/connect', '/icon.svg'} and method in READ:
         return 'web'
     if (method in READ and re.fullmatch(r'/_next/static/[A-Za-z0-9_./@()\[\]-]+', path)
             and '..' not in path and not path.endswith('.map')):
@@ -42,6 +46,8 @@ def route_for(path: str, method: str):
         return 'api'
     if method == 'GET' and re.fullmatch(JOB, path):
         return 'api'
+    if method == 'DELETE' and re.fullmatch(JOB, path):
+        return 'api'
     if method == 'POST' and (path in {
         '/api/v1/sessions/guest', '/api/v1/bridge/jobs', '/oauth/token',
         '/api/v1/bridge/oauth/prepare', '/api/v1/bridge/oauth/approve',
@@ -52,8 +58,8 @@ def route_for(path: str, method: str):
 
 
 def create_gateway(origin: str | None = None, transport=None):
-    settings = BridgeSettings(origin=origin or os.getenv('SONNIC_BRIDGE_ORIGIN', 'http://127.0.0.1:3010'))
-    hostname = urlsplit(settings.origin).hostname
+    settings = BridgeSettings(origin=origin or os.getenv('SONNIC_BRIDGE_ORIGIN', 'http://127.0.0.1:3010'),
+        public_aliases=tuple(filter(None, os.getenv('SONNIC_BRIDGE_ALIASES', '').split(','))))
 
     @asynccontextmanager
     async def lifespan(app):
@@ -66,7 +72,7 @@ def create_gateway(origin: str | None = None, transport=None):
 
     @app.middleware('http')
     async def forward(request: Request, call_next):
-        if request.url.hostname not in {hostname, '127.0.0.1', 'localhost', 'testserver'}:
+        if request.url.hostname not in settings.allowed_hosts | {'127.0.0.1', 'localhost', 'testserver'}:
             return JSONResponse({'detail': 'host_not_allowed'}, status_code=400)
         path = request.url.path
         # Reject encoded separators/segments rather than normalizing to another route.
@@ -100,7 +106,8 @@ def create_gateway(origin: str | None = None, transport=None):
         for cookie in upstream.headers.get_list('set-cookie'):
             response.headers.append('set-cookie', cookie)
         response.headers.update({'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
-                                 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY'})
+                                 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY',
+                                 'Content-Security-Policy': "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"})
         return response
 
     return app

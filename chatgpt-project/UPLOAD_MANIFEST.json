@@ -141,8 +141,8 @@
   "files": [
     {
       "path": "PROJECT_INSTRUCTIONS.md",
-      "sha256": "eb32925b309e854b02b6ba3488e6fbba8539b807477e3401f077af241db70c6b",
-      "bytes": 8644,
+      "sha256": "e8c6e55e32e4fd672fcb7b744a7ce4fa66a86d367d8108eeced22384b7d9e57b",
+      "bytes": 10110,
       "upload_allowed": true,
       "contains_personal_dreams": false
     },
@@ -176,8 +176,8 @@
     },
     {
       "path": "BRIDGE_CONTRACT.md",
-      "sha256": "508a341fe0f76cf59f08e570cd3afa776ea55aa79fe749a7e38ebd1ee57e3594",
-      "bytes": 9379,
+      "sha256": "9d8544ba9f6d4a625aa96b2b0673f33cd74b6647df9e7e47d8a8eacfb8b77821",
+      "bytes": 12097,
       "upload_allowed": true,
       "contains_personal_dreams": false
     },

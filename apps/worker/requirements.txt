@@ -1,0 +1,2 @@
+# Uses installed Google Chrome; no Playwright browser download is required.
+playwright==1.58.0

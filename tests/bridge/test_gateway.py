@@ -15,6 +15,9 @@ def test_gateway_blocks_non_lab_routes():
         assert not seen
         assert client.get('/bridge').status_code == 200
         assert seen[-1].url.port == 3000
+        assert client.get('/icon.svg?icon.test.svg').status_code == 200
+        assert seen[-1].url.port == 3000
+        assert seen[-1].url.path == '/icon.svg'
         assert client.post('/mcp', json={}).status_code == 200
         assert seen[-1].url.port == 8000
 
@@ -34,6 +37,18 @@ def test_gateway_never_reuses_another_visitors_cookie():
         assert seen[-1] == 'sonnic_guest=visitor-two'
 
 
+def test_gateway_allows_delete_only_for_an_exact_job_route():
+    seen = []
+    def upstream(request):
+        seen.append((request.method, request.url.path))
+        return httpx.Response(200, json={'state': 'cancelled'})
+    job = '00000000-0000-4000-8000-000000000001'
+    with TestClient(create_gateway(transport=httpx.MockTransport(upstream))) as client:
+        assert client.delete('/api/v1/bridge/jobs/' + job).status_code == 200
+        assert seen == [('DELETE', '/api/v1/bridge/jobs/' + job)]
+        assert client.delete('/api/v1/bridge/jobs/' + job + '/cancel').status_code == 404
+
+
 def test_gateway_limits_body_and_does_not_forward_untrusted_host():
     def upstream(request):
         assert request.headers['host'] == '127.0.0.1:8000'
@@ -45,6 +60,8 @@ def test_gateway_limits_body_and_does_not_forward_untrusted_host():
         response = client.post('/mcp', json={}, headers={'x-forwarded-host':'evil.invalid'})
         assert response.status_code == 401
         assert response.headers['www-authenticate'] == 'Bearer realm="lab"'
+        assert response.headers['content-security-policy'].startswith("default-src 'self';")
+        assert "frame-ancestors 'none'" in response.headers['content-security-policy']
 
 
 def test_upstream_failure_is_sanitized():

@@ -191,6 +191,26 @@ def test_cancel_scrubs_payload_and_rejects_late_result(lab):
         q.submit(worker, answer(packet))
 
 
+def test_delete_physically_removes_owned_job_and_claim(lab):
+    q, site, *_ = lab
+    service = Principal('service', 'service', frozenset({'dispatch'}))
+    job = UUID(q.enqueue(site, 'blue-parrot-ru', uuid4()))
+    packet = q.claim_next(service, uuid4())
+    tombstone = q.delete(site, job)
+    assert tombstone['state'] == 'cancelled'
+    assert tombstone['dream_text'] is None and tombstone['result'] is None
+    with q.db() as db:
+        assert db.execute('SELECT 1 FROM jobs WHERE id=?', (str(job),)).fetchone() is None
+        assert db.execute('SELECT 1 FROM dispatch_claims WHERE job=?', (str(job),)).fetchone() is None
+        assert db.execute('PRAGMA secure_delete').fetchone()[0] == 1
+    with pytest.raises(BridgeError, match='job_not_found'):
+        q.status(site, job)
+    with pytest.raises(BridgeError, match='job_not_found'):
+        q.delete(site, job)
+    with pytest.raises(BridgeError, match='stale_or_mismatched_result'):
+        q.submit_dispatch(service, answer(packet))
+
+
 def test_persistence_and_concurrent_claim(lab):
     q, site, worker, _, now = lab
     jobs = [UUID(q.enqueue(site, 'blue-parrot-ru', uuid4())) for _ in range(2)]
